@@ -1,0 +1,10 @@
+Usage:  cmd inner <command> [flags] [arguments]
+
+        Commands:
+        not-runnable        command containing a help topic
+        simple              
+                                    
+        Flags:              
+        -help               show help message
+
+Use "cmd help inner <command>" for more information about that command.

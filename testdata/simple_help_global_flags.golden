@@ -1,0 +1,9 @@
+Example application.
+
+Usage:  simple <command> [flags] [arguments]
+
+        Flags:                      
+        -globalflag (string)        global flag (default "none")
+        -name (string)              your name (default "World")
+        -help                       show help message
+

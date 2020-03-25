@@ -1,0 +1,8 @@
+Example application.
+
+Usage:  simple <command> [flags] [arguments]
+
+        Flags:                
+        -name (string)        your name (default "World")
+        -help                 show help message
+

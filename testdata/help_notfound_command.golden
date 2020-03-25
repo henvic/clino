@@ -1,0 +1,15 @@
+Example application.
+
+Usage:  app <command> [flags] [arguments]
+
+        Commands:
+        not-runnable         command containing a help topic
+        unimplemented        
+                                     
+        Flags:               
+        -help                show help message
+
+Use "app help <command>" for more information about that command.
+Example: add anything here.
+
+If you like this library, let me know!

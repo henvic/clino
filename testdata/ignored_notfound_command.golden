@@ -1,0 +1,17 @@
+Usage:  cmd <command> [flags] [arguments]
+
+        Commands:
+        not-runnable                command containing a help topic
+        inner                       
+                                            
+        Flags:                      
+        -custom (value)             custom flag test
+        -deadline (duration)        deadline for the operation (default 5s)
+        -nodes (int)                number of nodes (default 1)
+        -open                       open link in the browser (default true)
+        -planet (string)            name of the planet (default "Earth")
+        -unused                     unused bool flag
+        -verbose                    show more information
+        -help                       show help message
+
+Use "cmd help <command>" for more information about that command.
