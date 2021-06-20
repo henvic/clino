@@ -1,5 +1,5 @@
 # clino
-[![GoDoc](https://godoc.org/github.com/henvic/clino?status.svg)](https://godoc.org/github.com/henvic/clino) [![Build Status](https://travis-ci.org/henvic/clino.svg?branch=master)](https://travis-ci.org/henvic/clino) [![Coverage Status](https://coveralls.io/repos/henvic/clino/badge.svg)](https://coveralls.io/r/henvic/clino) [![Go Report Card](https://goreportcard.com/badge/github.com/henvic/clino)](https://goreportcard.com/report/github.com/henvic/clino)
+[![Go Reference](https://pkg.go.dev/badge/github.com/henvic/clino.svg)](https://pkg.go.dev/github.com/henvic/clino) [![Build Status](https://github.com/henvic/clino/workflows/Tests/badge.svg)](https://github.com/henvic/clino/actions?query=workflow%3ATests) [![Coverage Status](https://coveralls.io/repos/henvic/clino/badge.svg)](https://coveralls.io/r/henvic/clino) [![Go Report Card](https://goreportcard.com/badge/github.com/henvic/clino)](https://goreportcard.com/report/github.com/henvic/clino)
 
 Package clino provides a simple way to create CLI (command-line interface) tools.
 
@@ -82,7 +82,7 @@ type Footer interface {
 
 ### Parent interface
 Parent contains all subcommands of a given command. Your root command needs to implement it.
-```
+```go
 type Parent interface {
 	Commands() []Command
 }
