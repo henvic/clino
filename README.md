@@ -44,11 +44,20 @@ type Runnable interface {
 ```
 
 ### FlagSet interface
-You want to implement this interface to accept flags on your command. See also Program.GlobalFlags for supporting global flags on your application.
+You want to implement this interface to accept flags on your command.
 
 ```go
 type FlagSet interface {
 	Flags(flags *flag.FlagSet)
+}
+```
+
+### PersistentFlagSet interface
+Use the following PersistentFlagSet to define flags for a command and its children.
+
+```go
+type PersistentFlagSet interface {
+	PersistentFlags(flags *flag.FlagSet)
 }
 ```
 

@@ -36,6 +36,18 @@ func (sc *simpleCommand) Run(ctx context.Context, args ...string) error {
 	return nil
 }
 
+type persistentFlagsCommand struct {
+	simpleCommand
+	verbose bool
+}
+
+// PersistentFlags of the command.
+func (pc *persistentFlagsCommand) PersistentFlags(flags *flag.FlagSet) {
+	flags.BoolVar(&pc.verbose, "verbose", false, "verbose mode")
+	var persistentflag string
+	flags.StringVar(&persistentflag, "persistentflag", "none", "persistent flag")
+}
+
 // rootCommand is an application with multiple commands
 type rootCommand struct{}
 
@@ -62,6 +74,23 @@ func (rc *rootCommand) Foot() string {
 	return `Example: add anything here.
 
 If you like this library, let me know!`
+}
+
+// anotherCommand is an application with multiple commands
+type anotherCommand struct{}
+
+// Commands for the application.
+func (rc *anotherCommand) Commands() []Command {
+	return []Command{
+		&notRunnableCommand{},
+		&unimplementedCommand{},
+		&simpleCommand{},
+	}
+}
+
+// Name of the application.
+func (rc *anotherCommand) Name() string {
+	return "app"
 }
 
 // notRunnableCommand is a command compromised only of help text.
@@ -134,6 +163,15 @@ func (rcf *rootCommandWithFlags) Commands() []Command {
 func (rcf *rootCommandWithFlags) Run(ctx context.Context, args ...string) error {
 	fmt.Println("custom string: " + rcf.custom.String())
 	return nil
+}
+
+type rootCommandWithFlagsAndPersistentFlags struct {
+	rootCommandWithFlags
+}
+
+func (rfp *rootCommandWithFlagsAndPersistentFlags) PersistentFlags(flags *flag.FlagSet) {
+	var persistentflag string
+	flags.StringVar(&persistentflag, "persistentflag", "none", "persistent flag")
 }
 
 type customFlag struct {

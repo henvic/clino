@@ -147,6 +147,14 @@ func TestProgramHelp(t *testing.T) {
 			golden: "testdata/simple_help_global_flags.golden",
 		},
 		{
+			desc: "simple program with persistent flags called with -h and persistent flags",
+			program: Program{
+				Root: &persistentFlagsCommand{},
+			},
+			args:   []string{"-h"},
+			golden: "testdata/simple_help_persistent_flags.golden",
+		},
+		{
 			desc:    "simple program called with -help",
 			program: Program{Root: &simpleCommand{}},
 			args:    []string{"-help"},
@@ -267,6 +275,14 @@ func TestProgramHelp(t *testing.T) {
 			args:   []string{"inner", "-help"},
 		},
 		{
+			desc: "inner command with children -help and persistent flags",
+			program: Program{
+				Root: &rootCommandWithFlagsAndPersistentFlags{},
+			},
+			golden: "testdata/inner_commands_with_children_persistent_flags.golden",
+			args:   []string{"inner", "-help"},
+		},
+		{
 			desc:    "not runnable inner subcommand",
 			program: Program{Root: &rootCommandWithFlags{}},
 			golden:  "testdata/inner_not_runnable_command.golden",
@@ -292,6 +308,13 @@ func TestProgramHelp(t *testing.T) {
 			args:    []string{"notfound", "x", "-v"},
 			err:     "unknown command: 'app notfound'",
 			golden:  "testdata/help_notfound_command.golden",
+		},
+		{
+			desc:    "another command not found",
+			program: Program{Root: &anotherCommand{}},
+			args:    []string{"not-runnable", "notfound", "x", "-v"},
+			err:     "unknown command: 'app not-runnable notfound'",
+			golden:  "testdata/help_notfound_another_command.golden",
 		},
 		{
 			desc:    "help command not found",
@@ -332,6 +355,15 @@ func TestProgramHelp(t *testing.T) {
 			args:   []string{"inner", "notfound", "-help", "x", "-v"},
 			err:    "unknown command: 'cmd inner notfound'",
 			golden: "testdata/inner_notfound_command_global_flags.golden",
+		},
+		{
+			desc: "inner command not found -help with global flags",
+			program: Program{
+				Root: &rootCommandWithFlagsAndPersistentFlags{},
+			},
+			args:   []string{"inner", "notfound", "-help", "x", "-v"},
+			err:    "unknown command: 'cmd inner notfound'",
+			golden: "testdata/inner_notfound_command_persistent_flags.golden",
 		},
 	}
 	for _, tc := range testCases {

@@ -15,14 +15,14 @@ type State struct {
 	Verbose bool
 }
 
-// Flags implements the clino.FlagSet.
-func (s *State) Flags(flags *flag.FlagSet) {
-	flags.BoolVar(&s.Verbose, "verbose", false, "show more information")
-}
-
 // RootCommand is the main command for the application.
 type RootCommand struct {
 	State *State
+}
+
+// PersistentFlags for clino to use.
+func (rc *RootCommand) PersistentFlags(flags *flag.FlagSet) {
+	flags.BoolVar(&rc.State.Verbose, "verbose", false, "show more information")
 }
 
 // Commands for the application.
@@ -114,7 +114,6 @@ func main() {
 		Root: &RootCommand{
 			State: state,
 		},
-		GlobalFlags: state.Flags,
 	}
 	if err := p.Run(context.Background(), os.Args[1:]...); err != nil {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)

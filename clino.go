@@ -55,6 +55,16 @@ type FlagSet interface {
 	Flags(flags *flag.FlagSet)
 }
 
+// PersistentFlagSet is similar to FlagSet, but flags are inherited by the next commands.
+// 	// PersistentFlags of the "main" command.
+// 	func (mc *MainCommand) PersistentFlags(flags *flag.FlagSet) {
+//		flags.BoolVar(&hc.verbose, "verbose", false, "verbose mode")
+// 	}
+// You need to implement a Flags function like shown and set any flags you want your commands to parse.
+type PersistentFlagSet interface {
+	PersistentFlags(flags *flag.FlagSet)
+}
+
 // Longer description or help message for your command.
 // The help command prints the returned value of the Long function as the "help" output of a command.
 type Longer interface {
@@ -81,7 +91,7 @@ type Program struct {
 
 	// GlobalFlags are flags available to all commands.
 	//
-	// To see how you can retrieve the values, see example/complex.
+	// Deprecated: Use PersistentFlags instead.
 	GlobalFlags func(flags *flag.FlagSet)
 
 	// Output is the default output function to the application.
@@ -93,10 +103,19 @@ type Program struct {
 	fs *flag.FlagSet
 }
 
-// Run command.
+// Run program by processing arguments and executing the invoked command.
 //
 // Context is passed down to the command to simplify testing and cancelation.
 // Arguments should be the process arguments (os.Args[1:]...) when you call it from main().
+//
+// Example:
+// p := clino.Program{
+// 	Root: &RootCommand{},
+// }
+// if err := p.Run(context.Background(), os.Args[1:]...); err != nil {
+// 	fmt.Fprintf(os.Stderr, "%+v\n", err)
+// 	os.Exit(clino.ExitCode(err))
+// }
 func (p *Program) Run(ctx context.Context, args ...string) error {
 	if p.Output == nil {
 		p.Output = os.Stdout
@@ -140,12 +159,8 @@ func commandNotFound(binary string, trail []string) error {
 	return fmt.Errorf("unknown command: '%v'", strings.Join(trail, " "))
 }
 
-func (p *Program) loadCommand(ctx context.Context, args []string) (Command, []string) {
+func (p *Program) loadCommand(ctx context.Context, args []string) []Command {
 	commands := getSubcommands(p.Root)
-	if len(args) == 0 {
-		return p.Root, []string{}
-	}
-
 	cmdArgs := getCommandArgs(args)
 	return p.walkCommand(commands, cmdArgs)
 }
@@ -158,20 +173,22 @@ func skipHelpCommand(args []string) []string {
 }
 
 func (p *Program) runCommand(ctx context.Context, args []string) error {
-	cmd, trail := p.loadCommand(ctx, skipHelpCommand(args))
-	if f, ok := cmd.(FlagSet); ok {
+	trail := p.loadCommand(ctx, skipHelpCommand(args))
+	cmd := trail[len(trail)-1]
+
+	for _, c := range trail {
+		if f, ok := c.(PersistentFlagSet); ok && f != nil {
+			f.PersistentFlags(p.fs)
+		}
+	}
+	if f, ok := cmd.(FlagSet); ok && f != nil {
 		f.Flags(p.fs)
 	}
 	if (len(args) == 0 && !isRunnable(p.Root)) || (len(args) != 0 && args[0] == "help") {
 		return p.runHelp(ctx, args)
 	}
-	if len(trail) == 0 {
-		if _, ok := p.Root.(Runnable); !ok {
-			return p.runHelp(ctx, args) // "unknown command" is printed by the help function.
-		}
-	}
-	if r, ok := cmd.(Runnable); ok {
-		err := p.fs.Parse(args[len(trail):])
+	if r, ok := cmd.(Runnable); ok && r != nil {
+		err := p.fs.Parse(args[len(trail)-1:])
 		if err == flag.ErrHelp {
 			return p.runHelp(ctx, args)
 		}
@@ -187,20 +204,27 @@ func (p *Program) runHelp(ctx context.Context, args []string) error {
 	if len(args) >= 1 && args[0] == "help" {
 		args = args[1:]
 	}
-	cmd, trail := p.walkCommand(getSubcommands(p.Root), getCommandArgs(args))
+	trail := p.walkCommand(getSubcommands(p.Root), getCommandArgs(args))
+	cmd := trail[len(trail)-1]
+
+	var breadcrumb []string
+	for _, c := range trail {
+		breadcrumb = append(breadcrumb, c.Name())
+	}
+	breadcrumb = breadcrumb[1:]
 
 	h := &helper{
 		Output:   p.Output,
 		Commands: getSubcommands(cmd),
 		binary:   p.Root.Name(),
-		trail:    trail,
+		trail:    breadcrumb,
 		args:     args,
 		fs:       p.fs,
 	}
-	if l, ok := cmd.(Longer); ok {
+	if l, ok := cmd.(Longer); ok && l != nil {
 		h.Long = l.Long
 	}
-	if f, ok := cmd.(Footer); ok {
+	if f, ok := cmd.(Footer); ok && f != nil {
 		h.Foot = f.Foot
 	}
 
@@ -229,16 +253,15 @@ func getCommand(commands []Command, name string) (cmd Command, ok bool) {
 // walkCommand is similar to getCommand, but recursive and it stops
 // when it can't find any further command following the path.
 // The returned trail value is the "breadcrumb" for the command.
-func (p *Program) walkCommand(commands []Command, names []string) (cmd Command, trail []string) {
-	cmd = p.Root
+func (p *Program) walkCommand(commands []Command, names []string) (trail []Command) {
+	trail = append(trail, p.Root)
 	current := commands
 	for _, name := range names {
 		c, next := getCommand(current, name)
 		if !next {
 			return
 		}
-		trail = append(trail, name)
-		cmd = c
+		trail = append(trail, c)
 		current = getSubcommands(c)
 	}
 	return
@@ -258,7 +281,7 @@ func getCommandArgs(args []string) (out []string) {
 }
 
 func getSubcommands(cmd Command) []Command {
-	if p, ok := cmd.(Parent); ok {
+	if p, ok := cmd.(Parent); ok && p != nil {
 		return p.Commands()
 	}
 	return []Command{}

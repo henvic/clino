@@ -1,0 +1,10 @@
+Example application.
+
+Usage:  simple <command> [flags] [arguments]
+
+        Flags:                          
+        -name (string)                  your name (default "World")
+        -persistentflag (string)        persistent flag (default "none")
+        -verbose                        verbose mode
+        -help                           show help message
+
